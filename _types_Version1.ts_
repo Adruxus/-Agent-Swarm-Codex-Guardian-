@@ -1,0 +1,65 @@
+/**
+ * COMPLETE TYPE DEFINITIONS
+ * 
+ * All TypeScript interfaces used throughout the system.
+ * Immutable and fully documented.
+ */
+
+// ============================================================================
+// BASELINE RULES
+// ============================================================================
+
+export interface BaselineRule {
+  id: string;
+  rule: string;
+  immutable: boolean;
+  createdAt: Date;
+  hash: string;
+  source: string;
+  rfcCompliance: boolean;
+  performanceThreshold?: number;
+}
+
+// ============================================================================
+// EXPERIMENTAL RULES
+// ============================================================================
+
+export interface ExperimentalRule {
+  id: string;
+  rule: string;
+  generation: number;
+  agentNumber: number;
+  measurementMetrics: string[];
+  status: 'active' | 'archived' | 'deprecated';
+  createdAt: Date;
+  justification: string;
+  performanceThreshold: number;
+}
+
+// ============================================================================
+// AGENT ALIGNMENT
+// ============================================================================
+
+export interface AgentAlignment {
+  name: 'LAWFUL_GOOD' | 'NEUTRAL_GOOD' | 'CHAOTIC_GOOD' | 'CHAOTIC_NEUTRAL';
+  strictness: number;
+  flexibility: number;
+  description: string;
+  temperatureMultiplier: number;
+  outputCharacteristics: string[];
+}
+
+// ============================================================================
+// AGENT CONFIGURATION
+// ============================================================================
+
+export interface AgentConfiguration {
+  agentId: string;
+  generation: number;
+  agentNumber: number;
+  focusArea: string;
+  alignment: AgentAlignment;
+  baselineRules: BaselineRule[];
+  experimentalRules: ExperimentalRule[];
+  systemPrompt: string;
+  create

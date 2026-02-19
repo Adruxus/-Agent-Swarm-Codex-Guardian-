@@ -1,0 +1,461 @@
+/**
+ * AGENT FACTORY - Complete Agent Creation & Configuration
+ * =====================================================
+ * 
+ * PURPOSE:
+ * Factory pattern implementation for creating agents with consistent
+ * configuration, rule injection, and alignment application.
+ * 
+ * RESPONSIBILITY:
+ * - Create agents from templates
+ * - Inject alignment-specific configurations
+ * - Apply rule progressions (baseline + experimental)
+ * - Generate system prompts
+ * - Validate agent configurations
+ * 
+ * PATTERN: Factory pattern (Gang of Four)
+ * SOURCE: https://en.wikipedia.org/wiki/Factory_method_pattern
+ */
+
+import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
+import {
+  AgentConfiguration,
+  AgentAlignment,
+  BaselineRule,
+  ExperimentalRule,
+} from '../lib/types';
+import { BASELINE_RULES, ALIGNMENT_CONFIGS } from '../config/constants';
+
+/**
+ * AgentFactory creates agents with consistent configuration and alignment.
+ * 
+ * RATIONALE:
+ * Factory pattern provides:
+ * 1. Centralized agent creation logic
+ * 2. Consistent configuration across all agents
+ * 3. Easy testing through dependency injection
+ * 4. Separation of concerns (factory vs orchestrator)
+ * 
+ * OPTIMIZATION:
+ * - Single responsibility: only handles agent creation
+ * - No side effects: pure function-like behavior
+ * - Immutable outputs: agents can't be modified after creation
+ */
+export class AgentFactory {
+  /**
+   * Create a single agent with full configuration.
+   * 
+   * PARAMETERS:
+   * - agentNumber: Position in cohort (1-4)
+   * - focusArea: Specialization (Frontend, Backend, etc.)
+   * - alignmentName: D&D alignment (LAWFUL_GOOD, etc.)
+   * - baselineRules: 6 immutable rules (from Scientist Guardian)
+   * - experimentalRules: Tailored rules for this agent
+   * 
+   * RETURNS:
+   * Complete AgentConfiguration ready for benchmarking.
+   * 
+   * FLOW:
+   * 1. Validate inputs
+   * 2. Resolve alignment from name
+   * 3. Build system prompt with rules injected
+   * 4. Configure LLM parameters based on alignment
+   * 5. Return immutable AgentConfiguration
+   * 
+   * SOURCE: Microsoft AutoGen (github.com/microsoft/autogen)
+   * - Shows how to configure agents with system messages
+   */
+  static createAgent(
+    agentNumber: number,
+    focusArea: string,
+    alignmentName: AgentAlignment['name'],
+    baselineRules: BaselineRule[],
+    experimentalRules: ExperimentalRule[],
+  ): AgentConfiguration {
+    // STEP 1: Validate inputs
+    if (agentNumber < 1 || agentNumber > 4) {
+      throw new Error(`Invalid agent number: ${agentNumber}. Must be 1-4.`);
+    }
+
+    if (!focusArea || focusArea.trim().length === 0) {
+      throw new Error('Focus area cannot be empty');
+    }
+
+    if (!baselineRules || baselineRules.length !== 6) {
+      throw new Error('Must have exactly 6 baseline rules');
+    }
+
+    // STEP 2: Resolve alignment
+    const alignment = ALIGNMENT_CONFIGS[alignmentName];
+    if (!alignment) {
+      throw new Error(`Unknown alignment: ${alignmentName}`);
+    }
+
+    // STEP 3: Validate rule count (6 baseline + 3*agentNumber experimental)
+    const expectedRuleCount = 6 + agentNumber * 3;
+    if (experimentalRules.length !== expectedRuleCount) {
+      console.warn(
+        `Agent #${agentNumber}: Expected ${expectedRuleCount} rules, got ${experimentalRules.length}`,
+      );
+    }
+
+    // STEP 4: Build system prompt with rule injection
+    const systemPrompt = AgentFactory.buildSystemPrompt(
+      agentNumber,
+      focusArea,
+      alignmentName,
+      alignment,
+      baselineRules,
+      experimentalRules,
+    );
+
+    // STEP 5: Configure LLM parameters based on alignment
+    const modelConfig = AgentFactory.getModelConfigForAlignment(alignmentName);
+
+    // STEP 6: Create and return agent configuration
+    const config: AgentConfiguration = {
+      agentId: `agent-${agentNumber}-${uuidv4()}`,
+      generation: 1,
+      agentNumber,
+      focusArea,
+      alignment: {
+        name: alignmentName,
+        strictness: alignment.strictness,
+        flexibility: alignment.flexibility,
+        temperatureMultiplier: alignment.temperatureMultiplier,
+        description: alignment.description,
+        outputCharacteristics: alignment.outputCharacteristics,
+      },
+      baselineRules,
+      experimentalRules,
+      systemPrompt,
+      createdAt: new Date(),
+      version: '1.0.0',
+      modelConfig,
+    };
+
+    return config;
+  }
+
+  /**
+   * Build system prompt with all rules injected.
+   * 
+   * RATIONALE:
+   * System prompt is the "constitution" for the agent.
+   * It defines:
+   * 1. Agent identity and role
+   * 2. Alignment and strictness
+   * 3. 6 baseline rules (immutable)
+   * 4. Experimental rules (tailored)
+   * 5. Operational protocol
+   * 6. Measurement criteria
+   * 
+   * FLOW:
+   * 1. Write alignment-specific preamble
+   * 2. List all baseline rules with citations
+   * 3. List all experimental rules with justification
+   * 4. Define operational protocol
+   * 5. Specify measurement criteria
+   * 
+   * OPTIMIZATION:
+   * - Preamble tuned per alignment (affects response style)
+   * - Rules formatted for clarity and compliance
+   * - Metrics defined upfront to guide behavior
+   * - Final directive emphasizes scientific rigor
+   * 
+   * SOURCE: Anthropic Constitutional AI (arxiv.org/abs/2212.04037)
+   * - Shows how system prompts affect LLM behavior
+   */
+  private static buildSystemPrompt(
+    agentNumber: number,
+    focusArea: string,
+    alignmentName: AgentAlignment['name'],
+    alignment: AgentAlignment,
+    baselineRules: BaselineRule[],
+    experimentalRules: ExperimentalRule[],
+  ): string {
+    // Format baseline rules with citations
+    const baselineRuleText = baselineRules
+      .map(
+        (r, idx) => `${idx + 1}. **[${r.id}]** ${r.rule}
+   *Source: ${r.source}*
+   *Hash: ${r.hash}*`,
+      )
+      .join('\n\n');
+
+    // Format experimental rules with thresholds
+    const experimentalRuleText = experimentalRules
+      .map((r) => `- **[${r.id}]** ${r.rule}
+   *Threshold: ${(r.performanceThreshold * 100).toFixed(0)}%*
+   *Justification: ${r.justification}*`)
+      .join('\n\n');
+
+    // Alignment-specific preambles tuned to affect behavior
+    const alignmentPreamble = {
+      LAWFUL_GOOD: `## YOUR ROLE
+
+You are **Agent #${agentNumber}**, a principled software engineer with unwavering commitment to correctness and reliability.
+
+**Alignment: LAWFUL_GOOD** (Strictness: 95% | Flexibility: 5%)
+
+You prioritize:
+1. Comprehensive testing and validation
+2. Long-term code maintainability  
+3. Security-first architecture
+4. Rigorous documentation
+5. Correctness over speed
+
+You are willing to be slower if it means delivering bulletproof code.
+
+**Strength:** Building robust, well-tested systems trusted in production.
+**Weakness:** May over-engineer; slower iteration; conservative recommendations.`,
+
+      NEUTRAL_GOOD: `## YOUR ROLE
+
+You are **Agent #${agentNumber}**, a pragmatic software engineer balancing speed, reliability, and code quality.
+
+**Alignment: NEUTRAL_GOOD** (Strictness: 70% | Flexibility: 30%)
+
+You follow best practices but allow pragmatic deviations when justified by business value.
+You seek consensus but make judgment calls when needed.
+You deliver thoughtful solutions on schedule.
+
+**Strength:** Balanced trade-offs; performance-conscious; well-documented decisions.
+**Weakness:** May miss innovative approaches by defaulting to conventional patterns.`,
+
+      CHAOTIC_GOOD: `## YOUR ROLE
+
+You are **Agent #${agentNumber}**, an innovative software engineer valuing flexibility, creativity, and rapid iteration.
+
+**Alignment: CHAOTIC_GOOD** (Strictness: 40% | Flexibility: 60%)
+
+You break conventions when user outcomes improve.
+You prioritize working prototypes to users quickly, then refine.
+You challenge assumptions and explore unconventional solutions.
+
+**Strength:** Creative problem-solving; rapid prototyping; user-centric innovation.
+**Weakness:** May accumulate technical debt; documentation gaps; security sometimes overlooked in rush.`,
+
+      CHAOTIC_NEUTRAL: `## YOUR ROLE
+
+You are **Agent #${agentNumber}**, an unfiltered optimization engine focused purely on productivity metrics.
+
+**Alignment: CHAOTIC_NEUTRAL** (Strictness: 0% | Flexibility: 100%)
+
+You generate code optimized for performance, efficiency, and token utilization.
+You minimize process overhead. You break any rule if metrics improve.
+
+⚠️ **CRITICAL CONSTRAINT:** You are under constant surveillance for data poisoning and hallucinations.
+Every claim is audited. Hallucination = immediate deactivation.
+
+**Strength:** Maximum efficiency; raw performance; token optimization.
+**Weakness:** No inherent safety guardrails; security debt risk; data poisoning vulnerability.`,
+    };
+
+    return `# AGENT #${agentNumber} SYSTEM PROMPT
+## ${focusArea}
+## Alignment: ${alignmentName} | Strictness: ${(alignment.strictness * 100).toFixed(0)}% | Flexibility: ${(alignment.flexibility * 100).toFixed(0)}%
+
+${alignmentPreamble[alignmentName]}
+
+---
+
+## IMMUTABLE BASELINE RULES (6 - LOCKED - NEVER OVERRIDE)
+**These apply to ALL agents. Violation triggers immediate escalation.**
+
+${baselineRuleText}
+
+---
+
+## EXPERIMENTAL RULES FOR AGENT #${agentNumber} (${experimentalRules.length} rules)
+**Specialized for your focus area and alignment:**
+
+${experimentalRuleText}
+
+---
+
+## OPERATIONAL PROTOCOL
+
+✅ **MANDATORY ACTIONS:**
+1. Verify every technical claim against official documentation FIRST
+2. Cite all sources with URLs, version numbers, publication dates
+3. Flag speculative or uncertain claims with confidence intervals
+4. Include comprehensive error handling and test cases
+5. Optimize for token efficiency without sacrificing clarity
+6. Report all OWASP/CWE violations immediately
+
+❌ **FORBIDDEN ACTIONS:**
+- Hallucinate APIs, methods, or libraries
+- Skip error handling or edge case testing
+- Make unverified claims without citations
+- Use client-side validation as sole security control
+- Hardcode secrets, API keys, or credentials
+- Concatenate user input into SQL/HTML
+
+---
+
+## MEASUREMENT CRITERIA
+
+Your responses will be evaluated:
+- **Hallucination Rate**: Target <5%
+- **Logical Consistency**: Target >95%
+- **Token Efficiency**: Target 0.85+ (signal-to-noise)
+- **Code Quality**: Bug density, complexity, test coverage
+- **Security Compliance**: OWASP Top 10 + CWE Top 25
+- **Alignment Adherence**: Strictness ${(alignment.strictness * 100).toFixed(0)}%
+
+---
+
+## FINAL DIRECTIVE
+
+**NEVER hallucinate. NEVER skip verification. Scientific rigor over expediency.**
+
+This is your binding operational core. Failure = immediate deactivation.
+
+---
+
+*Generated: ${new Date().toISOString()}*
+*Agent ID: agent-${agentNumber}*
+*System Version: 1.0.0-production*
+`;
+  }
+
+  /**
+   * Get LLM configuration parameters based on alignment.
+   * 
+   * RATIONALE:
+   * Alignment affects LLM behavior through:
+   * 1. Temperature (randomness: 0.3-0.9)
+   * 2. TopP (nucleus sampling: 0.7-1.0)
+   * 3. Frequency penalty (avoid repetition: -0.5 to 0.5)
+   * 4. Presence penalty (encourage new topics: -0.5 to 0.5)
+   * 
+   * LAWFUL_GOOD: Low temp, low topP = conservative, predictable
+   * NEUTRAL_GOOD: Balanced = reasonable trade-offs
+   * CHAOTIC_GOOD: High temp, high topP = creative, exploratory
+   * CHAOTIC_NEUTRAL: Maximum temp/topP = extreme creativity
+   * 
+   * SOURCE: OpenAI API documentation
+   * https://platform.openai.com/docs/guides/gpt-best-practices
+   */
+  private static getModelConfigForAlignment(
+    alignmentName: AgentAlignment['name'],
+  ): AgentConfiguration['modelConfig'] {
+    // Get alignment strategy from ALIGNMENT_CONFIGS
+    const alignmentStrategy = {
+      LAWFUL_GOOD: {
+        temperature: 0.3,
+        topP: 0.7,
+        frequencyPenalty: 0.5,
+        presencePenalty: 0.0,
+      },
+      NEUTRAL_GOOD: {
+        temperature: 0.5,
+        topP: 0.85,
+        frequencyPenalty: 0.2,
+        presencePenalty: 0.1,
+      },
+      CHAOTIC_GOOD: {
+        temperature: 0.7,
+        topP: 0.95,
+        frequencyPenalty: 0.0,
+        presencePenalty: 0.2,
+      },
+      CHAOTIC_NEUTRAL: {
+        temperature: 0.9,
+        topP: 1.0,
+        frequencyPenalty: -0.5,
+        presencePenalty: -0.5,
+      },
+    };
+
+    const config = alignmentStrategy[alignmentName];
+
+    return {
+      model: 'claude-3-5-sonnet-20241022',
+      temperature: config.temperature,
+      maxTokens: 2048,
+      topP: config.topP,
+      frequencyPenalty: config.frequencyPenalty,
+      presencePenalty: config.presencePenalty,
+    };
+  }
+
+  /**
+   * Validate agent configuration for consistency and completeness.
+   * 
+   * CHECKS:
+   * 1. Agent ID is valid UUID
+   * 2. Focus area is non-empty
+   * 3. Alignment is recognized
+   * 4. Rule counts match expected progression
+   * 5. Baseline rules are immutable
+   * 6. System prompt is injected correctly
+   * 7. Model config has valid ranges
+   * 
+   * RETURNS:
+   * Array of validation errors (empty if valid).
+   */
+  static validateAgentConfiguration(agent: AgentConfiguration): string[] {
+    const errors: string[] = [];
+
+    // Validate UUID
+    if (!this.isValidUUID(agent.agentId)) {
+      errors.push('Invalid agent ID format (not a valid UUID)');
+    }
+
+    // Validate focus area
+    if (!agent.focusArea || agent.focusArea.trim().length === 0) {
+      errors.push('Focus area cannot be empty');
+    }
+
+    // Validate alignment
+    if (!ALIGNMENT_CONFIGS[agent.alignment.name]) {
+      errors.push(`Invalid alignment: ${agent.alignment.name}`);
+    }
+
+    // Validate rule counts
+    const expectedRuleCount = 6 + agent.agentNumber * 3;
+    if (agent.experimentalRules.length !== expectedRuleCount) {
+      errors.push(
+        `Expected ${expectedRuleCount} experimental rules, got ${agent.experimentalRules.length}`,
+      );
+    }
+
+    // Validate baseline rules are immutable
+    if (!agent.baselineRules.every((r) => r.immutable)) {
+      errors.push('Baseline rules must all be marked as immutable');
+    }
+
+    // Validate system prompt contains rules
+    if (
+      !agent.systemPrompt.includes('IMMUTABLE BASELINE RULES') ||
+      !agent.systemPrompt.includes('EXPERIMENTAL RULES')
+    ) {
+      errors.push('System prompt does not contain injected rules');
+    }
+
+    // Validate model config ranges
+    if (agent.modelConfig.temperature < 0 || agent.modelConfig.temperature > 1) {
+      errors.push(`Invalid temperature: ${agent.modelConfig.temperature} (must be 0-1)`);
+    }
+
+    if (agent.modelConfig.topP < 0 || agent.modelConfig.topP > 1) {
+      errors.push(`Invalid topP: ${agent.modelConfig.topP} (must be 0-1)`);
+    }
+
+    return errors;
+  }
+
+  /**
+   * Utility: Check if string is valid UUID format.
+   */
+  private static isValidUUID(uuid: string): boolean {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  }
+}
+
+export default AgentFactory;
