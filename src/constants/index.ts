@@ -8,7 +8,7 @@
  * 4. Default settings
  */
 
-import { BaselineRule, AgentAlignment } from '../lib/types';
+import { BaselineRule, AgentAlignment, RuleLibrary } from '../types';
 
 /**
  * 6 IMMUTABLE BASELINE RULES
@@ -94,7 +94,7 @@ export const BASELINE_RULES: BaselineRule[] = [
  * - source: Citation (peer-reviewed or government standard)
  * - threshold: Minimum improvement required to keep rule (0.0-1.0)
  */
-export const RULE_LIBRARY = {
+export const RULE_LIBRARY: RuleLibrary = {
   'reduce-hallucination': [
     {
       rule:

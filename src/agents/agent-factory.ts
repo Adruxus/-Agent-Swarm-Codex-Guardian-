@@ -18,14 +18,14 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import crypto from 'crypto';
 import {
   AgentConfiguration,
   AgentAlignment,
   BaselineRule,
   ExperimentalRule,
-} from '../lib/types';
-import { BASELINE_RULES, ALIGNMENT_CONFIGS } from '../config/constants';
+  ModelConfig,
+} from '../types';
+import { ALIGNMENT_CONFIGS } from '../constants';
 
 /**
  * AgentFactory creates agents with consistent configuration and alignment.
@@ -192,7 +192,7 @@ export class AgentFactory {
       .join('\n\n');
 
     // Alignment-specific preambles tuned to affect behavior
-    const alignmentPreamble = {
+    const alignmentPreamble: Record<AgentAlignment['name'], string> = {
       LAWFUL_GOOD: `## YOUR ROLE
 
 You are **Agent #${agentNumber}**, a principled software engineer with unwavering commitment to correctness and reliability.
@@ -341,9 +341,9 @@ This is your binding operational core. Failure = immediate deactivation.
    */
   private static getModelConfigForAlignment(
     alignmentName: AgentAlignment['name'],
-  ): AgentConfiguration['modelConfig'] {
+  ): ModelConfig {
     // Get alignment strategy from ALIGNMENT_CONFIGS
-    const alignmentStrategy = {
+    const alignmentStrategy: Record<AgentAlignment['name'], Omit<ModelConfig, 'model' | 'maxTokens'>> = {
       LAWFUL_GOOD: {
         temperature: 0.3,
         topP: 0.7,
@@ -449,12 +449,13 @@ This is your binding operational core. Failure = immediate deactivation.
   }
 
   /**
-   * Utility: Check if string is valid UUID format.
+   * Utility: Check if string is valid UUID format or contains a UUID.
+   * Accepts both pure UUIDs and agent IDs in format: agent-{number}-{uuid}
    */
-  private static isValidUUID(uuid: string): boolean {
+  private static isValidUUID(id: string): boolean {
     const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
   }
 }
 
