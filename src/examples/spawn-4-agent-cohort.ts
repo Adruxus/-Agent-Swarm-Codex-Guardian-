@@ -12,15 +12,15 @@
  * npm run example:spawn-cohort
  */
 
-import ScientistGuardianSpawner from '../src/agents/scientist-guardian-spawner';
-import AgentFactory from '../src/agents/agent-factory';
+import ScientistGuardianSpawner from '../agents/scientist-guardian-spawner';
+import AgentFactory from '../agents/agent-factory';
 import fs from 'fs';
 import path from 'path';
 
 /**
  * MAIN EXAMPLE FUNCTION
  */
-async function main() {
+function main() {
   console.log('🛡️ CODEX GUARDIAN - SPAWN 4-AGENT COHORT EXAMPLE\n');
 
   // STEP 1: Initialize Scientist Guardian
@@ -55,7 +55,7 @@ async function main() {
   console.log('\n');
 
   // STEP 3: Spawn 4-agent cohort
-  const agents = await spawner.spawnCohort(specification);
+  const agents = spawner.spawnCohort(specification);
 
   console.log(`\n✅ SPAWNED ${agents.length} AGENTS\n`);
 
@@ -105,7 +105,11 @@ async function main() {
   });
 
   // STEP 6: Save agents to file for later use
-  const configPath = path.join('./agent-data', 'agents-config.json');
+  const agentDataDir = './agent-data';
+  if (!fs.existsSync(agentDataDir)) {
+    fs.mkdirSync(agentDataDir, { recursive: true });
+  }
+  const configPath = path.join(agentDataDir, 'agents-config.json');
   fs.writeFileSync(configPath, JSON.stringify(agents, null, 2));
   console.log(`\n📁 Agent configurations saved to: ${configPath}`);
 
@@ -123,7 +127,9 @@ async function main() {
 }
 
 // Run example
-main().catch((error) => {
+try {
+  main();
+} catch (error) {
   console.error('❌ EXAMPLE FAILED:', error);
   process.exit(1);
-});
+}

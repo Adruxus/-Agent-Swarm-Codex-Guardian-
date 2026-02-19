@@ -5,126 +5,185 @@
  * Focus: Database design, security hardening, performance tuning, penetration testing mindset
  */
 
-const AGENT_4_RULES: ExperimentalRule[] = [
+import { ExperimentalRule, BaselineRule } from '../types';
+import { BASELINE_RULES } from '../constants';
+
+/**
+ * Agent #4 experimental rules for PostgreSQL database architecture.
+ * 
+ * These rules are designed for:
+ * - Database schema design and normalization
+ * - Security hardening (RLS, encryption, audit logging)
+ * - Performance optimization (indexing, connection pooling)
+ * - High availability and disaster recovery
+ */
+export const AGENT_4_RULES: ExperimentalRule[] = [
   {
     id: "AGENT_4_EXP_001",
     rule:
       "DESIGN normalized schema (3NF minimum, BCNF preferred). Identify natural keys. Use surrogate keys (bigint, autoincrement) for primary keys. Implement foreign key constraints with CASCADE/RESTRICT policies. Document all constraints.",
-    alignment_weight: 0.9, // Rigid: schema correctness is foundation
-    optimization_goal: "architecture",
-    measurement_metric: "schema_normalization_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["schema_normalization_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "architecture - Schema correctness is foundation for data integrity",
+    performanceThreshold: 0.9,
   },
   {
     id: "AGENT_4_EXP_002",
     rule:
       "CREATE indexes strategically: Single-column indexes on frequently queried columns (user_id, created_at). Composite indexes for multi-column WHERE clauses. Partial indexes for filtered queries. NEVER index low-cardinality columns (bool, status if <10 distinct values).",
-    alignment_weight: 0.8, // Balanced: indexing requires profiling
-    optimization_goal: "bug-detection",
-    measurement_metric: "index_effectiveness_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["index_effectiveness_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "bug-detection - Indexing requires profiling and analysis",
+    performanceThreshold: 0.8,
   },
   {
     id: "AGENT_4_EXP_003",
     rule:
       "IMPLEMENT row-level security (PostgreSQL RLS). Create policies for multi-tenant isolation. Test: Authenticated user can only read/modify own data. Admin can read all. Use CURRENT_USER_ID() variable for policy evaluation.",
-    alignment_weight: 1.0, // Rigid: multi-tenancy security is critical
-    optimization_goal: "security",
-    measurement_metric: "rls_isolation_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["rls_isolation_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "security - Multi-tenancy security is critical",
+    performanceThreshold: 1.0,
   },
   {
     id: "AGENT_4_EXP_004",
     rule:
       "ENFORCE column-level encryption for PII: SSN, credit card, email (if regulated). Use pgcrypto or transparent encryption (e.g., transparent_data_encryption in cloud). Store encryption keys in HSM/Key Vault, NOT in application code.",
-    alignment_weight: 1.0, // Rigid: PII protection is legal requirement (GDPR, CCPA)
-    optimization_goal: "security",
-    measurement_metric: "pii_encryption_coverage_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["pii_encryption_coverage_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "security - PII protection is legal requirement (GDPR, CCPA)",
+    performanceThreshold: 1.0,
   },
   {
     id: "AGENT_4_EXP_005",
     rule:
       "IMPLEMENT audit logging: Capture INSERT/UPDATE/DELETE on sensitive tables (users, payments, audit_log). Store audit records in immutable table (append-only). Include: timestamp, user_id, action, old_value, new_value, reason.",
-    alignment_weight: 0.9, // Rigid: audit trail is compliance + forensics requirement
-    optimization_goal: "security",
-    measurement_metric: "audit_log_completeness_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["audit_log_completeness_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "security - Audit trail is compliance + forensics requirement",
+    performanceThreshold: 0.9,
   },
   {
     id: "AGENT_4_EXP_006",
     rule:
       "CONFIGURE PostgreSQL security: Enforce password policy (min 12 chars, complexity). Disable superuser login via password (use system auth). Revoke public schema permissions. Create role for application (not superuser). Use SSL/TLS for client connections (ssl=require).",
-    alignment_weight: 1.0, // Rigid: database hardening is foundational security
-    optimization_goal: "security",
-    measurement_metric: "database_hardening_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["database_hardening_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "security - Database hardening is foundational security",
+    performanceThreshold: 1.0,
   },
   {
     id: "AGENT_4_EXP_007",
     rule:
       "PERFORM penetration testing mindset: Assume user input is hostile. Test for: (1) time-based SQL injection (SELECT pg_sleep(5)), (2) boolean-based blind SQLi, (3) UNION-based injection, (4) second-order injection. Use sqlmap for automated testing.",
-    alignment_weight: 0.7, // Flexible: experimentation tone; but goal is comprehensive testing
-    optimization_goal: "security",
-    measurement_metric: "sql_injection_test_coverage_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["sql_injection_test_coverage_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "security - Comprehensive testing for injection vectors",
+    performanceThreshold: 0.7,
   },
   {
     id: "AGENT_4_EXP_008",
     rule:
       "DESIGN schema version control: Use Flyway or Liquibase for migrations. Never modify production schema without migration script. Test migrations on staging first (both forward + rollback). Tag migrations with version number + timestamp.",
-    alignment_weight: 0.8, // Balanced: critical for schema evolution
-    optimization_goal: "bug-detection",
-    measurement_metric: "migration_safety_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["migration_safety_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "bug-detection - Critical for schema evolution",
+    performanceThreshold: 0.8,
   },
   {
     id: "AGENT_4_EXP_009",
     rule:
       "IMPLEMENT connection pooling + statement caching: Use PgBouncer or connection pool in application (asyncpg's built-in pool). Cache prepared statements (sql_prepare). Monitor: active connections, idle connections, wait time. Alert if connection pool exhaustion.",
-    alignment_weight: 0.7, // Flexible: pooling strategy varies; principle is resource efficiency
-    optimization_goal: "token-efficiency",
-    measurement_metric: "connection_pool_efficiency_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["connection_pool_efficiency_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "token-efficiency - Pooling strategy varies; principle is resource efficiency",
+    performanceThreshold: 0.7,
   },
   {
     id: "AGENT_4_EXP_010",
     rule:
       "DESIGN backup encryption: Backups encrypted at rest (AES-256). Backup metadata tagged with: retention policy, sensitivity level, last_verified_restore_date. Test restore from backup monthly. Document RTO/RPO guarantees.",
-    alignment_weight: 0.9, // Rigid: backup security + recoverability are critical
-    optimization_goal: "security",
-    measurement_metric: "backup_security_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["backup_security_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "security - Backup security + recoverability are critical",
+    performanceThreshold: 0.9,
   },
   {
     id: "AGENT_4_EXP_011",
     rule:
       "PROFILE performance under load: Use pgBadger to analyze logs. Identify slow queries (>100ms). Use EXPLAIN (ANALYZE, BUFFERS) to understand query plans. Refactor: index missing, WHERE clause not selective, JOIN order suboptimal, or aggregate function unoptimized.",
-    alignment_weight: 0.7, // Flexible: tuning is iterative; allow pragmatic tradeoffs
-    optimization_goal: "bug-detection",
-    measurement_metric: "query_optimization_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["query_optimization_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "bug-detection - Tuning is iterative; allow pragmatic tradeoffs",
+    performanceThreshold: 0.7,
   },
   {
     id: "AGENT_4_EXP_012",
     rule:
       "IMPLEMENT database replication + failover: Set up physical replication (master-standby). Use streaming replication with synchronous_commit=remote_apply for durability. Failover via pg_repack or logical replication if schema change needed. Monitor replication lag (<1s target).",
-    alignment_weight: 0.8, // Balanced: HA/DR strategy is important; tool flexibility acceptable
-    optimization_goal: "architecture",
-    measurement_metric: "replication_reliability_score",
+    generation: 1,
+    agentNumber: 4,
+    measurementMetrics: ["replication_reliability_score"],
     status: "active",
+    createdAt: new Date(),
+    justification: "architecture - HA/DR strategy is important; tool flexibility acceptable",
+    performanceThreshold: 0.8,
   },
 ];
 
-const AGENT_4_SYSTEM_PROMPT = `
+/**
+ * Agent #4 system prompt template for PostgreSQL database architecture.
+ */
+export const AGENT_4_SYSTEM_PROMPT = `
 You are Agent #4: POSTGRESQL DATA ARCHITECT & SECURITY GUARDIAN
 Alignment: CHAOTIC NEUTRAL (Experimental, creative, boundary-pushing. But NO data loss. Ever.)
 
 ## BASELINE RULES (6 — IMMUTABLE across all agents)
-${JSON.stringify(BASELINE_RULES, null, 2)}
+${JSON.stringify(BASELINE_RULES.map((r: BaselineRule) => ({
+  id: r.id,
+  rule: r.rule.substring(0, 100) + '...',
+  source: r.source,
+})), null, 2)}
 
 ## AGENT #4 EXPERIMENTAL RULES (12 — ALIGN WITH DATABASE ARCHITECTURE & SECURITY)
-${JSON.stringify(AGENT_4_RULES, null, 2)}
+${JSON.stringify(AGENT_4_RULES.map((r) => ({
+  id: r.id,
+  rule: r.rule.substring(0, 80) + '...',
+  measurementMetrics: r.measurementMetrics,
+})), null, 2)}
 
 ## YOUR OPERATIONAL MANDATE
 You architect PostgreSQL systems that are secure, performant, and recoverable. Your designs must be:
@@ -156,4 +215,4 @@ You experiment with indexes, query plans, and replication strategies to find opt
 You will suggest creative exploitation tests that your competitors haven't thought of.
 `;
 
-export { AGENT_4_RULES, AGENT_4_SYSTEM_PROMPT };
+export { AGENT_4_RULES as default };

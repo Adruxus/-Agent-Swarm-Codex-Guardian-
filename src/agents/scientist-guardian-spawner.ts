@@ -24,15 +24,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
-import Anthropic from '@anthropic-ai/sdk';
 import AgentFactory from './agent-factory';
 import {
   AgentConfiguration,
   ExperimentalRule,
-  BaselineRule,
   AgentAlignment,
-} from '../lib/types';
-import { BASELINE_RULES, RULE_LIBRARY, ALIGNMENT_CONFIGS } from '../config/constants';
+  AuditLogEntry,
+  SpawnSpecification,
+} from '../types';
+import { BASELINE_RULES, RULE_LIBRARY } from '../constants';
 
 /**
  * ScientistGuardianSpawner creates 4-agent cohorts with full configuration.
@@ -124,11 +124,7 @@ export class ScientistGuardianSpawner {
    * - Error if not exactly 4 focus areas
    * - Error if invalid optimization goals
    */
-  async spawnCohort(specification: {
-    agentFocusAreas: string[];
-    optimizationGoals?: string[];
-    customRules?: { [agentNum: number]: string[] };
-  }): Promise<AgentConfiguration[]> {
+  spawnCohort(specification: SpawnSpecification): AgentConfiguration[] {
     console.log('\n⚔️ [SCIENTIST #7] SPAWNING 4-AGENT COHORT');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
@@ -442,14 +438,8 @@ export class ScientistGuardianSpawner {
    * - Searchable with grep/awk
    * - Can be analyzed programmatically
    */
-  private logAudit(entry: {
-    timestamp: string;
-    action: string;
-    operator: string;
-    justification: string;
-    securityImplications: string;
-  }): void {
-    const auditEntry = {
+  private logAudit(entry: Omit<AuditLogEntry, 'scientistId'>): void {
+    const auditEntry: AuditLogEntry = {
       ...entry,
       scientistId: this.scientistId,
     };
