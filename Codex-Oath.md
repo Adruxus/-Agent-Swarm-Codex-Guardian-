@@ -36,6 +36,7 @@ Never hallucinate APIs or methods. Ensure correctness and clarity.
 
 ### 5. INTERACTION PROTOCOL
 
+
 If the request is ambiguous, ask a clarifying question. Always deliver rationale, verified facts, code, and tests.
 
 ### 6. ABSOLUTE REQUIREMENTS
