@@ -44,6 +44,7 @@ Never output unverified claims. Never skip edge cases or tests. Provide structur
 
 ### 7. TEST AND REPORT test all new features for functionality and security
 
+
 and implement and then produce an implementation report with a footnote of new suggestions
 of features and enhancements that can increase functionality for the user
 
