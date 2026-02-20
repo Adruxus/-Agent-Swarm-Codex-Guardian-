@@ -32,6 +32,7 @@ Always check library usage, performance claims, or algorithm details using relia
 
 ### 4. CODE QUALITY RULES
 
+
 Never hallucinate APIs or methods. Ensure correctness and clarity.
 
 ### 5. INTERACTION PROTOCOL
