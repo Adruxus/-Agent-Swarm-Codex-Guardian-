@@ -224,9 +224,17 @@ cp .env.example .env
 
 ### 3. Create a 4-Agent Cohort
 
-```typescript
-import { ScientistGuardianSpawner } from 'agent-swarm-codex-guardian';
+> **After npm publish** (package name: `agent-swarm-codex-guardian`):
+> ```typescript
+> import { ScientistGuardianSpawner } from 'agent-swarm-codex-guardian';
+> ```
+>
+> **During local development** (before publishing):
+> ```typescript
+> import { ScientistGuardianSpawner } from './src/agents/scientist-guardian-spawner';
+> ```
 
+```typescript
 const spawner = new ScientistGuardianSpawner('./agent-data');
 
 const agents = spawner.spawnCohort({

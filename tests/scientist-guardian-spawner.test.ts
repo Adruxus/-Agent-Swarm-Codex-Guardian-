@@ -5,7 +5,7 @@
  * - spawnCohort: successful spawn, wrong number of focus areas, output shape
  * - Audit log is written on spawn
  *
- * SOURCE: IEEE Software Testing Standard (ISO/IEC/IEEE 42010:2011)
+ * SOURCE: ISO/IEC/IEEE 29119 (Software Testing Standard)
  */
 
 import fs from 'fs';

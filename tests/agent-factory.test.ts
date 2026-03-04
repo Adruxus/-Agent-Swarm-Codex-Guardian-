@@ -5,7 +5,7 @@
  * - createAgent: valid inputs, invalid agent numbers, empty focus area, wrong rule count
  * - validateAgentConfiguration: passes on valid agent, fails with correct errors
  *
- * SOURCE: IEEE Software Testing Standard (ISO/IEC/IEEE 42010:2011)
+ * SOURCE: ISO/IEC/IEEE 29119 (Software Testing Standard)
  */
 
 import { AgentFactory } from '../src/agents/agent-factory';

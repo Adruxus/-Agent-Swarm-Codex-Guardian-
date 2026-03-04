@@ -332,7 +332,7 @@ export class ScientistGuardianSpawner {
       } else if (alignmentName === 'CHAOTIC_GOOD') {
         selectedGoals = ['token-efficiency', 'architecture', 'bug-detection'];
       } else if (alignmentName === 'CHAOTIC_NEUTRAL') {
-        // Needs 18 rules for Agent #4 (6 baseline + 12 experimental).
+        // Needs 18 experimental rules for Agent #4 (6 baseline + 18 experimental = 24 total).
         // Include all five goal categories (30 pool entries) so the
         // rule-count requirement is always satisfiable.
         selectedGoals = [
