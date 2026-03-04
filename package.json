@@ -16,7 +16,8 @@
     "format:check": "prettier --check src/**/*.ts",
     "example:spawn-cohort": "ts-node src/examples/spawn-4-agent-cohort.ts",
     "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "keywords": [
     "ai",
@@ -27,8 +28,15 @@
     "claude",
     "orchestration"
   ],
-  "author": "",
+  "author": "Codex Guardian Contributors",
   "license": "MIT",
+  "files": [
+    "dist",
+    "lib",
+    "README.md",
+    "Codex-Oath.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
     "uuid": "^9.0.0"
