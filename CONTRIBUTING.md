@@ -98,6 +98,7 @@ Use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`
 
 Examples:
+
 - `feat(rules): add CHAOTIC_GOOD architecture rule for microservices`
 - `fix(spawner): ensure CHAOTIC_NEUTRAL has enough default rules for Agent #4`
 - `docs(readme): correct class name in Quick Start example`
