@@ -213,46 +213,39 @@ Every modification is logged with:
 
 ```bash
 npm install
-# or
-pnpm install
 ```
 
 ### 2. Set Environment
 
 ```bash
 cp .env.example .env
-# Set ANTHROPIC_API_KEY
+# Edit .env and set ANTHROPIC_API_KEY
 ```
 
-### 3. Create 4-Agent Cohort
+### 3. Create a 4-Agent Cohort
 
 ```typescript
-import { ScientistGuardian } from './src/agents/scientist-guardian';
+import { ScientistGuardianSpawner } from 'agent-swarm-codex-guardian';
 
-const scientist = new ScientistGuardian(process.env.ANTHROPIC_API_KEY);
+const spawner = new ScientistGuardianSpawner('./agent-data');
 
-const agents = await scientist.acceptUserInput({
+const agents = spawner.spawnCohort({
   agentFocusAreas: [
-    "React/NextJS Frontend",
-    "Python FastAPI Backend",
-    "DevOps/Infrastructure",
-    "PostgreSQL Security"
+    'React/NextJS Frontend',
+    'Python FastAPI Backend',
+    'DevOps/Infrastructure',
+    'PostgreSQL Security',
   ],
-  optimizationGoals: ['reduce-hallucination', 'token-efficiency', 'security']
+  optimizationGoals: ['reduce-hallucination', 'token-efficiency', 'bug-detection', 'security'],
 });
+
+console.log(`Spawned ${agents.length} agents`);
 ```
 
-### 4. Run Benchmarks
+### 4. Run the Included Example
 
 ```bash
-npm run benchmark agents
-```
-
-### 5. Generate Report
-
-```bash
-npm run report:security
-npm run report:performance
+npm run example:spawn-cohort
 ```
 
 ---
@@ -264,25 +257,24 @@ npm run report:performance
 npm test
 
 # Specific suite
-npm test -- unit/scientist-guardian.test.ts
-npm test -- security/data-poisoning-detection.test.ts
+npm test -- agent-factory.test.ts
+npm test -- scientist-guardian-spawner.test.ts
 
-# Coverage
+# Coverage report
 npm run test:coverage
 ```
 
 ---
 
-## Documentation Map
+## Documentation
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [ARCHITECTURE.md](./docs/01-SYSTEM-ARCHITECTURE.md) | System design, data flow, optimization | Engineers, Architects |
-| [ALIGNMENT-GUIDE.md](./docs/02-ALIGNMENT-GUIDE.md) | Alignment behavior, rule interaction | Product Managers, QA |
-| [METRICS-ALGORITHMS.md](./docs/04-METRICS-ALGORITHMS.md) | Measurement formulas, statistical basis | Data Scientists |
-| [SECURITY-PROTOCOLS.md](./docs/05-SECURITY-PROTOCOLS.md) | OWASP/CWE/NIST mappings, compliance | Security Engineers |
-| [API-REFERENCE.md](./docs/07-API-REFERENCE.md) | Every public method, parameters, returns | Developers |
-| [DEPLOYMENT-GUIDE.md](./docs/08-DEPLOYMENT-GUIDE.md) | Production setup, monitoring, scaling | DevOps, SREs |
+| [README.md](./README.md) | Overview, quick start, system architecture | All |
+| [Codex-Oath.md](./Codex-Oath.md) | Operational principles and agent mandate | All |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines, code standards | Developers |
+| [src/types/index.ts](./src/types/index.ts) | Full TypeScript type definitions | Developers |
+| [src/constants/index.ts](./src/constants/index.ts) | Baseline rules, rule library, alignment configs | Developers |
 
 ---
 
@@ -304,9 +296,37 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
 
 ---
 
+## Publishing to npm
+
+This package is structured for npm distribution (`dist/` output, `types` field, `files` whitelist).
+
+### Steps to publish
+
+```bash
+# 1. Log in to npm (one-time)
+npm login
+
+# 2. Verify the package name is available
+npm info agent-swarm-codex-guardian
+
+# 3. Publish (runs typecheck + lint + tests + build automatically)
+npm publish --access public
+```
+
+`prepublishOnly` in `package.json` ensures tests and the build pass before
+anything is pushed to the registry.
+
+### What gets published
+
+Only the files listed in the `files` field of `package.json` are included:
+`dist/`, `lib/`, `README.md`, `Codex-Oath.md`, `LICENSE`.
+Source files, tests, and configuration are excluded.
+
+---
+
 ## License & Governance
 
-This project is governed by the **Codex Guardian Oath** (see [CODEX-OATH.md](./CODEX-OATH.md)).
+This project is governed by the **Codex Guardian Oath** (see [Codex-Oath.md](./Codex-Oath.md)).
 
 All code, documentation, and modifications are subject to:
 - Academic rigor (peer-reviewed sources only)
